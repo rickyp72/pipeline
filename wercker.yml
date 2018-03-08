@@ -1,79 +1,33 @@
-box: golang
+box:
+  id: golang
+  ports:
+    - "5000"
 
 dev:
   steps:
-    - setup-go-workspace:
-        package-dir: github.com/rickyp72/pipeline
-
-    - script:
-        name: env
-        code: env
-
-    - script:
-        name: go get
-        code: |
-          cd $WERCKER_SOURCE_DIR
-          go version
-          go get -u github.com/Masterminds/glide
-          export PATH=$WERCKER_SOURCE_DIR/bin:$PATH
-          glide install
-
     - internal/watch:
-        code: go run main.go
+        code: |
+          go build ./...
+          ./source
         reload: true
 
+# Build definition
 build:
+  # The steps that will be executed on build
   steps:
-    - setup-go-workspace:
-        package-dir: github.com/rickyp72/pipeline
 
-    - script:
-        name: env
-        code: env
-
-    - script:
-        name: go get
-        code: |
-          cd $WERCKER_SOURCE_DIR
-          go version
-          go get github.com/rickyp72/pipeline
-          export PATH=$WERCKER_SOURCE_DIR/bin:$PATH
-          glide install
+    # golint step!
+    - wercker/golint
 
     # Build the project
     - script:
         name: go build
         code: |
-          go build
+          go build ./...
 
     # Test the project
     - script:
         name: go test
         code: |
-          go test -v $(glide novendor)
-
-    - script:
-        name: copy files to wercker output
-        code: |
-          cp -R ./ ${WERCKER_OUTPUT_DIR}
-
-
-deploy:
- steps:
-   - internal/docker-push:
-       username: $DOCKER_USERNAME
-       password: $DOCKER_PASSWORD
-       cmd: /pipeline/source/hello
-       port: "8080"
-       tag: latest
-       repository: rickyparkinson/pipeline
-       registry: https://registry.hub.docker.com
-
-   - cng/cf-deploy:
-       api: $API
-       user: $USER
-       password: $PASSWORD
-       org: $ORG
-       space: $SPACE
-       appname: pipeline
-       docker_image: rickyparkinson/pipeline
+          go test ./...
+		
