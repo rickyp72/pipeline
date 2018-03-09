@@ -7,8 +7,6 @@ dev:
   steps:
     - internal/watch:
         code: |
-          go get -u github.com/Masterminds/glide
-          glide install
           #go build ./...
           #./source
         reload: true
@@ -20,16 +18,15 @@ build:
         package-dir: github.com/cloudnativego/hello
   # The steps that will be executed on build
   steps:
-
     # golint step!
     - wercker/golint
-
+    # Build the project
+    - script:
+        name: get deps
+          dep ensure
     # Build the project
     - script:
         name: go build
-        code: |
-          go get -u github.com/Masterminds/glide
-          glide install
           go build ./...
 
     ## Test the project
